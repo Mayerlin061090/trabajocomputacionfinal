@@ -1,0 +1,145 @@
+---
+title: "Análisis descriptivo de las estadísticas ofensivas para la temporada    2018-19 de la NBA"
+output: 
+  flexdashboard::flex_dashboard:
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(plotly)
+library(tidyverse)
+library(DT)
+library(shiny)
+library(readxl)
+
+NBA_G1 <- read_excel("C:/Users/hp/Downloads/NBA G1.xls")
+NBA_2018_19_seleccion <- NBA_G1 %>%
+  filter(SEASON == "2018-19") %>%
+  select(TEAM, GP, W, `WIN%`, PTS, `FG%`, `3P%`, REB)
+```
+
+
+Analisis Gafico
+=====================================  
+    
+Column {data-width=600}
+-------------------------------------
+
+### Relación entre Puntos Anotados (PTS) vs. Porcentaje de Tiros de Campo Exitosos FG%
+
+```{r}
+
+# Gráfico de dispersión interactivo con plotly
+scatter_plot <- plot_ly(
+  data = NBA_2018_19_seleccion, 
+  x = ~PTS, 
+  y = ~`FG%`, 
+  type = 'scatter', 
+  mode = 'markers', 
+  marker = list(color = 'blue', size = 10)
+) %>%
+  layout(
+    title = "",
+    xaxis = list(title = "Partidos Ganados (W)"),
+    yaxis = list(title = "Puntos Anotados (PTS)")
+  )
+
+scatter_plot
+
+
+```
+
+Column {data-width=400}
+-------------------------------------
+
+### Distribución de Partidos Ganados (W)
+
+```{r}
+# Gráfico de histograma interactivo con plotly
+histogram_plot <- plot_ly(
+  data = NBA_2018_19_seleccion, 
+  x = ~W, 
+  type = 'histogram'
+) %>%
+  layout(
+    title = "",
+    xaxis = list(title = "Partidos Ganados (W)"),
+    yaxis = list(title = "Frecuencia")
+  )
+
+histogram_plot
+
+
+```
+
+### Proporción de equipos según Partidos Ganados (W) 
+
+```{r}
+
+NBA_2018_19_seleccion <- NBA_2018_19_seleccion %>%
+  mutate(Categoria_W = case_when(
+    W < 30 ~ "menos de 30",
+    between(W, 30, 50) ~ "entre 30-50",
+    W > 50 ~ "mas de 50"
+  ))
+# Gráfico circular interactivo con plotly utilizando la nueva columna "Categoria_W"
+pie_chart <- plot_ly(
+  data = NBA_2018_19_seleccion, 
+  labels = ~Categoria_W,  
+  type = 'pie'
+) %>%
+  layout(
+    title = "Categorías de Partidos Ganados",
+    xaxis = list(title = ""),
+    yaxis = list(title = "")
+  )
+
+pie_chart
+
+```
+
+
+Analisis de variabilidad de los Puntos Anotados {data-orientation=rows}
+=====================================     
+   
+Row {data-height=300}
+-------------------------------------
+
+### Partidos Ganados (W) Promedio
+
+```{r}
+valueBox(round(mean(NBA_2018_19_seleccion$W), 2), icon = "fa-pencil")
+
+```
+
+### Variación de los Partidos Ganados (W)
+
+```{r}
+valueBox(round(sd(NBA_2018_19_seleccion$W), 2), icon = "fa-tachometer", color = "red")
+
+```
+
+
+Row {data-height=700}
+-------------------------------------
+
+### Gráfico de caja y bigotes Partidos Ganados (W) vs Partidos jugados (GP)
+
+
+```{r}
+# Gráfico de caja y bigotes con plotly
+box_plot2 <- plot_ly(NBA_2018_19_seleccion, x = ~GP, y = ~W, type = 'box')  %>% layout(boxmode = "group")
+box_plot2
+
+```
+
+
+Dataframe visualizacion {data-orientation=rows}
+=====================================  
+
+```{r}
+# Tabla interactiva con DT
+datatable(NBA_2018_19_seleccion, options = list(order = list(list(0, 'asc'))), 
+          rownames = FALSE, filter = "top", class = "compact")
+
+```
